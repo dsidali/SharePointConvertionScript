@@ -12,6 +12,9 @@ function Convert{
 
  Connect-PnPOnline $SiteURL -Interactive
  
+ Write-host "Converting Site:" $SiteURL
+
+
 #Get All Pages from "Site Pages" Library
 $Pages = Get-PnPListItem -List SitePages -PageSize 500
  
@@ -20,7 +23,7 @@ Try {
     {
         #Get the page name
         $PageName = $Page.FieldValues.FileLeafRef
-        Write-host "Converting Page:"$PageName
+        Write-host "Converting Page:" $PageName
  
         #Check if the page is classic
         If($Page.FieldValues["ClientSideApplicationId"] -eq "b6917cb1-93a0-4b97-a84d-7cf49975d4ec")
@@ -29,9 +32,16 @@ Try {
         }
         Else
         {
-            #Conver the classic page to modern page
+                if($PageName -clike 'Previous*'){
+                 Write-host "`tPage is already Converted:"$PageName -f Yellow
+
+                }
+                Else{
+                      #Conver the classic page to modern page
             ConvertTo-PnPPage -Identity $PageName -Overwrite -TakeSourcePageName -AddPageAcceptBanner
-            Write-host "`tPage Converted to Modern!" -f Green    
+            Write-host "`tPage Converted to Modern!" -f Green  
+                }
+        
         }
     }
 }
@@ -51,8 +61,10 @@ Catch {
 
 connect-pnponline -url https://8fcz4z-admin.sharepoint.com -Interactive 
 
-$AllSites = Get-PnPTenantSite
+#$AllSites = Get-PnPTenantSite -Template "STS#0"
 
+
+$AllSites = Get-PnPTenantSite | Where -Property Template -in ("STS#0", "SITEPAGEPUBLISHING#0")
 #Connect-PnPOnline -url $AllSites[3].Url -Interactive
 
 ForEach($CurrentSite in $AllSites){
